@@ -109,9 +109,14 @@ function addIncompleteReposWarning() {
 }
 
 function addNewRepoWarning() {
-  if (document.querySelector('.repo-saviour-new-repo-warning')) return;
+  console.log('🔍 RepoSaviour: Checking for new repo warning...');
+  if (document.querySelector('.repo-saviour-new-repo-warning')) {
+    console.log('🔍 RepoSaviour: Warning already exists, skipping...');
+    return;
+  }
   
   chrome.storage.local.get(['incompleteRepos'], (result) => {
+    console.log('🔍 RepoSaviour: Storage result:', result);
     if (result.incompleteRepos && result.incompleteRepos.length > 0) {
       const warning = document.createElement('div');
       warning.className = 'repo-saviour-new-repo-warning';
@@ -168,7 +173,10 @@ function addNewRepoWarning() {
                            document.querySelector('[data-testid="repository-create"]') ||
                            document.querySelector('.container-lg');
       
+      console.log('🔍 RepoSaviour: Target element found:', targetElement);
+      
       if (targetElement) {
+        console.log('🔍 RepoSaviour: Inserting warning into target element...');
         targetElement.insertBefore(warning, targetElement.firstChild);
         
         document.getElementById('repo-saviour-view-incomplete').addEventListener('click', () => {
@@ -184,10 +192,13 @@ function addNewRepoWarning() {
 }
 
 function initializeContentScript() {
+  console.log('🔍 RepoSaviour: Initializing content script...');
   if (window.location.hostname === 'github.com') {
     const path = window.location.pathname;
+    console.log('🔍 RepoSaviour: Current path:', path);
     
     if (path === '/' || path.startsWith('/user') || path.startsWith('/orgs')) {
+      console.log('🔍 RepoSaviour: Setting up observer for repos page...');
       const observer = new MutationObserver(() => {
         checkForNewRepositories();
         addRepoStatusIndicators();
@@ -205,7 +216,13 @@ function initializeContentScript() {
         addIncompleteReposWarning();
       }, 1000);
     } else if (path === '/new') {
+      console.log('🔍 RepoSaviour: On new repo page, adding warning...');
       addNewRepoWarning();
+      
+      setTimeout(() => {
+        console.log('🔍 RepoSaviour: Delayed check for new repo warning...');
+        addNewRepoWarning();
+      }, 2000);
     }
   }
 }

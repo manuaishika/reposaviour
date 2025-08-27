@@ -25,14 +25,28 @@ chrome.runtime.onInstalled.addListener(() => {
 });
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  console.log('🔍 RepoSaviour: Message received:', request.action);
+  
   if (request.action === 'setToken') {
+    console.log('🔍 RepoSaviour: Setting token...');
     githubToken = request.token;
     chrome.storage.local.set({ githubToken: request.token });
     fetchRepositories();
     sendResponse({ success: true });
   } else if (request.action === 'getRepos') {
+    console.log('🔍 RepoSaviour: Sending repos data. Total:', repos.length, 'Incomplete:', incompleteRepos.length);
+    
+    if (repos.length === 0 && githubToken) {
+      console.log('🔍 RepoSaviour: No repos cached, fetching now...');
+      fetchRepositories().then(() => {
+        sendResponse({ repos, incompleteRepos });
+      });
+      return true;
+    }
+    
     sendResponse({ repos, incompleteRepos });
   } else if (request.action === 'refreshRepos') {
+    console.log('🔍 RepoSaviour: Refreshing repositories...');
     fetchRepositories();
     sendResponse({ success: true });
   }
@@ -45,8 +59,13 @@ chrome.notifications.onButtonClicked.addListener((notificationId, buttonIndex) =
 });
 
 async function fetchRepositories() {
-  if (!githubToken) return;
+  if (!githubToken) {
+    console.log('🔍 RepoSaviour: No GitHub token available');
+    return;
+  }
 
+  console.log('🔍 RepoSaviour: Fetching repositories...');
+  
   try {
     const response = await fetch('https://api.github.com/user/repos?sort=updated&per_page=100', {
       headers: {
@@ -55,9 +74,17 @@ async function fetchRepositories() {
       }
     });
 
-    if (!response.ok) throw new Error('Failed to fetch repos');
+    console.log('🔍 RepoSaviour: Response status:', response.status);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('🔍 RepoSaviour: API Error:', response.status, errorText);
+      throw new Error(`Failed to fetch repos: ${response.status} ${errorText}`);
+    }
     
     const newRepos = await response.json();
+    console.log('🔍 RepoSaviour: Fetched repos:', newRepos.length);
+    
     const oldRepos = repos;
     repos = newRepos;
     
@@ -70,25 +97,30 @@ async function fetchRepositories() {
       lastUpdated: Date.now()
     });
     
+    console.log('🔍 RepoSaviour: Analysis complete. Total:', repos.length, 'Incomplete:', incompleteRepos.length);
     updateBadge();
   } catch (error) {
-    console.error('Error fetching repositories:', error);
+    console.error('🔍 RepoSaviour: Error fetching repositories:', error);
   }
 }
 
 function analyzeRepositories() {
+  console.log('🔍 RepoSaviour: Analyzing repositories...');
   incompleteRepos = repos.filter(repo => {
-    return isRepositoryIncomplete(repo);
+    const isIncomplete = isRepositoryIncomplete(repo);
+    if (isIncomplete) {
+      console.log('🔍 RepoSaviour: Incomplete repo:', repo.name, '- hasReadme:', repo.has_wiki || repo.description || (repo.topics && repo.topics.length > 0), 'hasCommits:', repo.updated_at !== repo.created_at);
+    }
+    return isIncomplete;
   });
+  console.log('🔍 RepoSaviour: Found', incompleteRepos.length, 'incomplete repositories');
 }
 
 function isRepositoryIncomplete(repo) {
   const hasReadme = repo.has_wiki || repo.description || repo.topics?.length > 0;
   const hasCommits = repo.updated_at !== repo.created_at;
-  const isFork = repo.fork;
-  const hasIssues = repo.open_issues_count > 0;
   
-  return !hasReadme || !hasCommits || (isFork && !hasIssues);
+  return !hasReadme || !hasCommits;
 }
 
 function checkForNewRepositories(oldRepos, newRepos) {

@@ -16,11 +16,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function checkTokenStatus() {
     chrome.storage.local.get(['githubToken'], (result) => {
+      console.log('🔍 RepoSaviour Popup: Token check result:', result);
       if (result.githubToken) {
         tokenInput.value = result.githubToken;
         tokenSection.style.display = 'none';
         mainContent.style.display = 'block';
         loadRepositories();
+      } else {
+        console.log('🔍 RepoSaviour Popup: No token found, showing token input');
       }
     });
   }
@@ -44,9 +47,13 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function loadRepositories() {
+    console.log('🔍 RepoSaviour Popup: Loading repositories...');
     chrome.runtime.sendMessage({ action: 'getRepos' }, (response) => {
+      console.log('🔍 RepoSaviour Popup: Got response:', response);
       if (response) {
         displayRepositories(response.repos, response.incompleteRepos);
+      } else {
+        console.log('🔍 RepoSaviour Popup: No response received');
       }
     });
   }
