@@ -121,10 +121,6 @@ document.addEventListener('DOMContentLoaded', () => {
       issues.push('No commits');
     }
     
-    if (repo.fork && repo.open_issues_count === 0) {
-      issues.push('Fork');
-    }
-    
     return issues.join(', ');
   }
 });
