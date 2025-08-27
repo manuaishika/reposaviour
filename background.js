@@ -9,6 +9,19 @@ chrome.runtime.onInstalled.addListener(() => {
       fetchRepositories();
     }
   });
+  
+  try {
+    if (chrome.alarms) {
+      chrome.alarms.create('refreshRepos', { periodInMinutes: 60 });
+      chrome.alarms.onAlarm.addListener((alarm) => {
+        if (alarm.name === 'refreshRepos') {
+          fetchRepositories();
+        }
+      });
+    }
+  } catch (error) {
+    console.log('Alarms API not available:', error);
+  }
 });
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -22,6 +35,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   } else if (request.action === 'refreshRepos') {
     fetchRepositories();
     sendResponse({ success: true });
+  }
+});
+
+chrome.notifications.onButtonClicked.addListener((notificationId, buttonIndex) => {
+  if (buttonIndex === 0) {
+    chrome.action.openPopup();
   }
 });
 
@@ -83,10 +102,17 @@ function checkForNewRepositories(oldRepos, newRepos) {
     if (incompleteCount > 0) {
       chrome.notifications.create({
         type: 'basic',
-        iconUrl: 'icons/icon128.png',
-        title: 'New Repository Created!',
-        message: `You have ${incompleteCount} incomplete repositories. Consider finishing them first.`
+        title: '🚨 New Repository Alert!',
+        message: `You just created "${newRepo.name}" but you have ${incompleteCount} unfinished projects!`,
+        requireInteraction: true,
+        buttons: [
+          { title: 'View Incomplete Repos' },
+          { title: 'I\'ll Finish Them Later' }
+        ]
       });
+      
+      chrome.action.setBadgeText({ text: '!' });
+      chrome.action.setBadgeBackgroundColor({ color: '#ff0000' });
     }
   }
 }
@@ -100,10 +126,3 @@ function updateBadge() {
     chrome.action.setBadgeText({ text: '' });
   }
 }
-
-chrome.alarms.create('refreshRepos', { periodInMinutes: 60 });
-chrome.alarms.onAlarm.addListener((alarm) => {
-  if (alarm.name === 'refreshRepos') {
-    fetchRepositories();
-  }
-});

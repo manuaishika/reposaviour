@@ -66,29 +66,31 @@ function addIncompleteReposWarning() {
         background: #fff3cd;
         border: 1px solid #ffeaa7;
         border-radius: 6px;
-        padding: 12px;
+        padding: 16px;
         margin: 16px 0;
         color: #856404;
         font-size: 14px;
         display: flex;
         align-items: center;
         justify-content: space-between;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
       `;
       
       warning.innerHTML = `
         <div>
-          <strong>⚠️ You have ${result.incompleteRepos.length} incomplete repositories!</strong>
-          <br>Consider finishing them before starting new projects.
+          <strong>🚨 STOP! You have ${result.incompleteRepos.length} incomplete repositories!</strong>
+          <br><em>"Before starting new projects, finish what you started!"</em>
         </div>
         <button id="repo-saviour-view" style="
-          background: #6c757d;
+          background: #dc3545;
           color: white;
           border: none;
-          padding: 6px 12px;
+          padding: 8px 16px;
           border-radius: 4px;
           cursor: pointer;
           font-size: 12px;
-        ">View Details</button>
+          font-weight: 500;
+        ">View Incomplete Repos</button>
       `;
       
       const targetElement = document.querySelector('.js-repos-container') || 
@@ -100,6 +102,81 @@ function addIncompleteReposWarning() {
         
         document.getElementById('repo-saviour-view').addEventListener('click', () => {
           chrome.runtime.sendMessage({ action: 'openPopup' });
+        });
+      }
+    }
+  });
+}
+
+function addNewRepoWarning() {
+  if (document.querySelector('.repo-saviour-new-repo-warning')) return;
+  
+  chrome.storage.local.get(['incompleteRepos'], (result) => {
+    if (result.incompleteRepos && result.incompleteRepos.length > 0) {
+      const warning = document.createElement('div');
+      warning.className = 'repo-saviour-new-repo-warning';
+      warning.style.cssText = `
+        background: #f8d7da;
+        border: 1px solid #f5c6cb;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 20px 0;
+        color: #721c24;
+        font-size: 16px;
+        text-align: center;
+        box-shadow: 0 4px 12px rgba(220,53,69,0.2);
+        position: relative;
+        z-index: 1000;
+      `;
+      
+      warning.innerHTML = `
+        <div style="font-size: 24px; margin-bottom: 12px;">🚨</div>
+        <div style="font-size: 18px; font-weight: bold; margin-bottom: 8px;">
+          Are you sure you want to create a NEW repository?
+        </div>
+        <div style="font-size: 14px; margin-bottom: 16px;">
+          You currently have <strong>${result.incompleteRepos.length} incomplete projects</strong> that need attention!
+        </div>
+        <div style="font-size: 13px; font-style: italic; margin-bottom: 20px; opacity: 0.8;">
+          "The best time to finish something is before starting something else."
+        </div>
+        <div style="display: flex; gap: 12px; justify-content: center;">
+          <button id="repo-saviour-continue" style="
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+          ">I'll Finish Them Later</button>
+          <button id="repo-saviour-view-incomplete" style="
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+          ">Show Me What's Incomplete</button>
+        </div>
+      `;
+      
+      const targetElement = document.querySelector('.js-repo-create') || 
+                           document.querySelector('[data-testid="repository-create"]') ||
+                           document.querySelector('.container-lg');
+      
+      if (targetElement) {
+        targetElement.insertBefore(warning, targetElement.firstChild);
+        
+        document.getElementById('repo-saviour-view-incomplete').addEventListener('click', () => {
+          chrome.runtime.sendMessage({ action: 'openPopup' });
+        });
+        
+        document.getElementById('repo-saviour-continue').addEventListener('click', () => {
+          warning.style.display = 'none';
         });
       }
     }
@@ -127,6 +204,8 @@ function initializeContentScript() {
         addRepoStatusIndicators();
         addIncompleteReposWarning();
       }, 1000);
+    } else if (path === '/new') {
+      addNewRepoWarning();
     }
   }
 }

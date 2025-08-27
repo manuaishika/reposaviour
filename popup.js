@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const incompleteReposEl = document.getElementById('incompleteRepos');
   const repoListEl = document.getElementById('repoList');
   const refreshBtn = document.getElementById('refreshBtn');
+  const motivationalMessageEl = document.getElementById('motivationalMessage');
 
   checkTokenStatus();
 
@@ -73,6 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!repos || repos.length === 0) {
       totalReposEl.textContent = '0';
       incompleteReposEl.textContent = '0';
+      motivationalMessageEl.style.display = 'none';
       repoListEl.innerHTML = '<div class="loading">No repositories found</div>';
       return;
     }
@@ -81,10 +83,13 @@ document.addEventListener('DOMContentLoaded', () => {
     incompleteReposEl.textContent = incompleteRepos.length;
 
     if (incompleteRepos.length === 0) {
+      motivationalMessageEl.style.display = 'none';
       repoListEl.innerHTML = '<div class="loading">All repositories are complete! 🎉</div>';
       return;
     }
 
+    motivationalMessageEl.style.display = 'flex';
+    
     const repoItems = incompleteRepos.map(repo => {
       const status = getRepoStatus(repo);
       return `

@@ -162,6 +162,39 @@
       font-size: 14px;
       margin-bottom: 16px;
     }
+    
+    .motivational-message {
+      background: #fff3cd;
+      border: 1px solid #ffeaa7;
+      border-radius: 6px;
+      padding: 16px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .warning-icon {
+      font-size: 24px;
+      flex-shrink: 0;
+    }
+    
+    .warning-text {
+      flex: 1;
+    }
+    
+    .warning-text strong {
+      color: #856404;
+      display: block;
+      margin-bottom: 4px;
+    }
+    
+    .warning-text p {
+      color: #856404;
+      margin: 0;
+      font-size: 13px;
+      opacity: 0.8;
+    }
   </style>
 </head>
 <body>
@@ -192,6 +225,13 @@
     
     <div class="incomplete-section">
       <h3 class="section-title">Incomplete Repositories</h3>
+      <div id="motivationalMessage" class="motivational-message" style="display: none;">
+        <div class="warning-icon">⚠️</div>
+        <div class="warning-text">
+          <strong>Before starting new projects, consider finishing these!</strong>
+          <p>You'll feel much better completing what you started.</p>
+        </div>
+      </div>
       <div id="repoList" class="repo-list">
         <div class="loading">Loading repositories...</div>
       </div>
