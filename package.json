@@ -1,0 +1,21 @@
+{
+  "name": "reposaviour",
+  "version": "1.0.0",
+  "description": "Chrome extension to track GitHub repositories and identify incomplete ones",
+  "main": "background.js",
+  "scripts": {
+    "build": "echo 'Extension built successfully'",
+    "dev": "echo 'Extension ready for development'",
+    "test": "echo 'No tests configured yet'"
+  },
+  "keywords": [
+    "chrome-extension",
+    "github",
+    "repository-tracking",
+    "productivity"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {},
+  "dependencies": {}
+}
